@@ -26,24 +26,12 @@ def print_time(prev_time):
     readable_time = f"{delta//3600}h {(delta//60)%60}m {delta%60:.2f}s"
     return readable_time
 
-# def convert_to_wav(file_path, output_path):
-#     # Load the audio file
-#     audio = AudioSegment.from_file(file_path)
-
-#     # Ensure the output path has a .wav extension
-#     if not output_path.endswith('.wav'):
-#         output_path += '.wav'
-
-#     # Export the audio to WAV format
-#     audio.export(output_path, format="wav")
-
-def split_audio_on_silence(file_name, path_to_temp, min_silence_len=300, silence_thresh=-16, keep_silence=100, min_chunk_length=1000, seek_step=1 ):
+def split_audio_on_silence(file_name, path_to_transcript_dir, min_silence_len=300, silence_thresh=-16, keep_silence=100, min_chunk_length=1000, seek_step=1):
     #  create a directory to store the audio chunks
-    folder_name = f"{path_to_temp}/audio-chunks"
+    folder_name = f"{path_to_transcript_dir}/audio-chunks"
     if not os.path.isdir(folder_name):
         os.mkdir(folder_name)
-    # split audio sound where silence is 0.5 seconds or more and get chunks
-    sound = AudioSegment.from_file(f"{path_to_temp}/{file_name}")
+    sound = AudioSegment.from_file(f"{path_to_transcript_dir}/{file_name}")
     chunks = split_on_silence(
         sound,
         min_silence_len=min_silence_len,
@@ -53,7 +41,7 @@ def split_audio_on_silence(file_name, path_to_temp, min_silence_len=300, silence
     )
     combined_audio = AudioSegment.silent(duration=10)
     accumulated_chunks = 0
-    for i, audio_chunk in enumerate(chunks, start=1):
+    for audio_chunk in tqdm(chunks, desc="Splitting audio chunks"):
         # export audio chunk and save it in
         # the `folder_name` directory.
         if(len(combined_audio) < min_chunk_length):
@@ -66,7 +54,7 @@ def split_audio_on_silence(file_name, path_to_temp, min_silence_len=300, silence
                 combined_audio.export(chunk_filename, format="wav")
                 accumulated_chunks += 1
             else:
-                logger.info(f"Chunk {i} is too quiet so it is not being saved")
+                logger.info(f"Chunk {accumulated_chunks} is too quiet so it is not being saved")
             combined_audio = AudioSegment.silent(duration=1)
 
 def transcribe_audio_mt(path, index, result_list):
@@ -92,7 +80,7 @@ def all_zip(given_path):
             else:
                 yield f"{given_path}/{file}"
 
-def find_correct_file(desired_file_name, file_path, path_to_temp, extract=True):
+def find_correct_file(desired_file_name, file_path, path_to_transcript_dir, extract=True):
      with zipfile.ZipFile(file_path, 'r') as zip_ref:
         for name in zip_ref.namelist():
             # if there is a folder, we have to go one level deeper first
@@ -102,21 +90,21 @@ def find_correct_file(desired_file_name, file_path, path_to_temp, extract=True):
                     file_name = sub_name.split("/")[-1]
                     if desired_file_name.lower() in file_name.lower():
                         if extract:
-                            zip_ref.extract(sub_name, path=path_to_temp)
-                            os.rename(f"{path_to_temp}/{sub_name}", f"{path_to_temp}/{file_name}")
-                            shutil.rmtree(f"{path_to_temp}/{dir_name}")
+                            zip_ref.extract(sub_name, path=path_to_transcript_dir)
+                            os.rename(f"{path_to_transcript_dir}/{sub_name}", f"{path_to_transcript_dir}/{file_name}")
+                            shutil.rmtree(f"{path_to_transcript_dir}/{dir_name}")
                         return file_name
             elif desired_file_name.lower() in name.lower():
                 if extract:
-                    zip_ref.extract(name, path=path_to_temp)
+                    zip_ref.extract(name, path=path_to_transcript_dir)
                 return name
         return ""    
 
 def transriber(
-        rec_base_path, 
-        base_path, 
-        desired_file_name, 
-        transcript_name=None, 
+        rec_base_path, #path to recording
+        base_path, #path to base folder
+        desired_file_name, #name of the file to transcribe
+        transcript_name=None, #name of the transcript
         min_silence_len=2000, 
         silence_thresh=-100, 
         keep_silence=100, 
@@ -125,7 +113,7 @@ def transriber(
     ):
     start = time.time()
     list_of_files = list(all_zip(rec_base_path))
-    for i in tqdm(list_of_files):
+    for i in tqdm(list_of_files, desc="Transcribing audio files"):
         if i.endswith(".zip"):
             next_time_start = time.time()
             session_name = i.split("/")[-1].split(".")[0]
@@ -133,28 +121,28 @@ def transriber(
             logger.info(f"Starting {session_name}")
             tokens = 0
             if(transcript_name is None):
-                path_to_transcript = f"{base_path}/transcript-{session_name}.txt"
-            else:
-                path_to_transcript = f"{base_path}/{transcript_name}.txt"
-            if os.path.isfile(rec_base_path):
-                path_to_temp = "/".join(rec_base_path.split("/")[:-1])+f"/temp-{session_name}"
-            else:
-                path_to_temp = rec_base_path+f"/temp-{session_name}"
-            name = find_correct_file(desired_file_name, i, path_to_temp)
+                # path_to_transcript = f"{new_path}/transcript-{session_name}.txt"
+                transcript_name = f"{session_name.replace(' ', '-')}"
+            path_to_transcript_dir = f"{base_path}/{transcript_name}"
+            path_to_transcript_file = f"{path_to_transcript_dir}/{transcript_name}.txt"
+                
+            if not os.path.isdir(path_to_transcript_dir):
+                os.mkdir(path_to_transcript_dir)
+            # path_to_temp = new_path+f"/temp-{session_name}"
+            name = find_correct_file(desired_file_name, i, path_to_transcript_dir)
             # Extract file
-            if not os.path.isfile(f"{path_to_temp}/{name}"):
+            if not os.path.isfile(f"{path_to_transcript_dir}/{name}"):
                 # zip_ref.extract(name, path=path_to_temp)
-                logger.info(f"Extracted {name} to {path_to_temp} in {print_time(next_time_start)} seconds")
+                logger.info(f"Extracted {name} to {path_to_transcript_dir} in {print_time(next_time_start)} seconds")
             else:
                 logger.info(f"{name} already extracted")
             next_time_start = time.time()
-
             # do transcription
             # 1. split on silence
             # Splits the large audio file into chunks
             split_audio_on_silence(
                 name, 
-                path_to_temp,
+                path_to_transcript_dir,
                 min_silence_len=min_silence_len,
                 silence_thresh=silence_thresh,
                 keep_silence=keep_silence,
@@ -169,7 +157,7 @@ def transriber(
             # Performs this in a multi-threaded manner
             manager = Manager()
             results = manager.list()
-            chunks_folder_name = f"{path_to_temp}/audio-chunks/"
+            chunks_folder_name = f"{path_to_transcript_dir}/audio-chunks/"
             ordered_list = sorted(os.listdir(chunks_folder_name), key=lambda x: int(x.split("_")[1].split(".")[0]))
             temp_paths = []
             for file in ordered_list:
@@ -180,19 +168,19 @@ def transriber(
             logger.info(f"Transcribed {name} in {print_time(next_time_start)} seconds")
             next_time_start = time.time()
 
-            # 3. save amd clean up
+            # 3. save and clean up
             # Writes the results to a file
-            if(os.path.isfile(path_to_transcript)):
-                os.remove(path_to_transcript)
+            if(os.path.isfile(path_to_transcript_file)):
+                os.remove(path_to_transcript_file)
             for result in final_result:
                 if(len(result[1].split(" ")) > 10):
                     tokens += len(result[1].split(" "))
-                with open(path_to_transcript, "a") as f: #change names
+                with open(path_to_transcript_file, "a") as f: #change names
                     f.write(result[1] + "\n")
             logger.info(f"Saved {name} in {print_time(next_time_start)} seconds")
             next_time_start = time.time()
             logger.info(f"Finished {session_name} in {print_time(start)} seconds with {tokens} words")
-            logger.info(f"Saved at {path_to_transcript}")
+            logger.info(f"Saved at {path_to_transcript_file}")
 
 def cleanup(rec_base_path):
     # List all subdirectories in the given directory
