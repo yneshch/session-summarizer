@@ -6,7 +6,15 @@ from fastapi import FastAPI
 from loguru import logger
 load_dotenv()
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_headers=["*"],
+    allow_methods=["*"],
+)
 
 @app.get("/")
 def read_root():
@@ -29,20 +37,8 @@ def get_all_transcript_paths():
     return possible_transcript_paths
 
 # TODO: add debug mode
-@app.get("/run_transcriber_all")
-def run_transcriber_all():
-    os.system(f"python3 /app/pysrc/transcriber_v2.py -a")
-    return "ok"
-
-@app.get("/run_transcriber_single/")
+@app.post("/run_transcriber_single/")
 def run_transcriber_single(session_number: int):
-    os.system(f"python3 /app/pysrc/transcriber_v2.py -s {session_number}")
-    return "ok"
-
-@app.get("/run_transcriber_batch/")
-def run_transcriber_batch(batch_size: int, session_number: int|None = None):
-    if  session_number is not None:
-        os.system(f"python3 /app/pysrc/transcriber_v2.py -b {batch_size} -s {session_number}")
-    else:
-        os.system(f"python3 /app/pysrc/transcriber_v2.py -b {batch_size}")
+    # os.system(f"python3 /app/pysrc/transcriber_v2.py -s {session_number}")
+    print(f"python3 /app/pysrc/transcriber_v2.py -s {session_number}")
     return "ok"

@@ -1,5 +1,6 @@
 /logs
-/prompt_file.txt
 *.ipynb
 /__pycache__
 *.md
+*.txt
+*.json
