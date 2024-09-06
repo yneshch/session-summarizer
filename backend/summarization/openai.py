@@ -2,8 +2,9 @@ import os
 from loguru import logger
 from openai import OpenAI
 from backend.utils.shared_utils import check_if_exists
+from backend.constants import DEBUG, VERBOSE
 
-def openai_massage(path_to_current, path_to_prev, debug = False, verbose = False):
+def openai_massage(path_to_current, path_to_prev):
     desired_summary_name = os.getenv("DESIRED_SUMMARY_NAME", "summary")
     model = os.getenv("OPENAI_MODEL", None)
     if not model:
@@ -26,20 +27,18 @@ def openai_massage(path_to_current, path_to_prev, debug = False, verbose = False
     messages = [
         {"role": "system", "content": prompt},
     ]
-    if verbose:
+    if VERBOSE:
         logger.debug(f"Path to transcript {path_to_current}")
         logger.debug(f"Path to previous transcript {path_to_prev}")
         logger.debug(f"Messages: {messages}")
         logger.debug(f"Prompt: {prompt}")
-    if debug:
+    if DEBUG:
         logger.info(f"OpenAI massage end")
         return
     with open(f"{path_to_current}deepgram-transcription.txt", "r") as res:
         text = res.read()
         messages.append({"role": "user", "content": text})
-    client = OpenAI(
-        api_key=os.getenv("OPENAI_API_KEY")
-    )
+    client = OpenAI() # gets from OPENAI_API_KEY env variable
     response = client.chat.completions.create(model = model, messages = messages)
     with open(f"{path_to_current}{desired_summary_name}.txt", "w") as file:
         file.write(response.choices[0].message.content)

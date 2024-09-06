@@ -9,11 +9,12 @@ from deepgram import (
     DeepgramClient,
     PrerecordedOptions,
 )
+from backend.constants import DEBUG, VERBOSE
 
 
-def extract_audio_from_zip(path_to_audio, path_to_current, debug = False):
+def extract_audio_from_zip(path_to_audio, path_to_current):
     if os.path.isdir(path_to_audio):
-        if debug:
+        if DEBUG:
             logger.error(f"{path_to_audio} is a directory")
         return False
     if glob.glob(f"{path_to_current}/*yak*") or glob.glob(f"{path_to_current}/*Yak*"):
@@ -27,18 +28,18 @@ def extract_audio_from_zip(path_to_audio, path_to_current, debug = False):
                 for sub_name in zip_ref.namelist():
                     dir_name = sub_name.split("/")[0]
                     file_name = sub_name.split("/")[-1]
-                    if not debug:
+                    if not DEBUG:
                         if "yak" in file_name.lower():
                             zip_ref.extract(sub_name, path=path_to_current)
                             os.rename(f"{path_to_current}/{sub_name}", f"{path_to_current}/{file_name}")
                             shutil.rmtree(f"{path_to_current}/{dir_name}")
             elif "yak" in name.lower():
-                if not debug:
+                if not DEBUG:
                     zip_ref.extract(name, path=path_to_current)
         logger.info("Extraction complete")
         return True
     
-def split_audio_into_chunks(path_to_current, debug = False, verbose = False):
+def split_audio_into_chunks(path_to_current):
     # send via buffer so no storage is necessary
     # find the file that contains "yak" in it
     logger.info(f"Splitting audio into chunks")
@@ -49,7 +50,7 @@ def split_audio_into_chunks(path_to_current, debug = False, verbose = False):
         if not files:
             logger.info("No audio with 'yak' in it")
             return
-    if verbose:
+    if VERBOSE:
         logger.debug(f"Path to audio: {path_to_current}")
         logger.debug(f"Path to chunks: {path_to_dir_chunks}")
     count = 0
@@ -66,7 +67,7 @@ def split_audio_into_chunks(path_to_current, debug = False, verbose = False):
                 logger.info("Chunks are not correct length")
                 # shutil.rmtree(path_to_dir_chunks)
                 # os.makedirs(path_to_dir_chunks)
-    if debug:
+    if DEBUG:
         logger.info("Splitting complete")
         return
     audio = AudioSegment.from_file(files[0])
@@ -92,10 +93,10 @@ def _fetch_with_retry(deepgram, payload, options, result_file, attempt):
         logger.error(f"Exception: {e}")
     return False
 
-def deepgram_transcription(path_to_current, token, debug = False, verbose = False):
+def deepgram_transcription(path_to_current):
     logger.info(f"Deepgram Transcription started")
     path_to_dir_chunks = f"{path_to_current}audio_chunks/"
-    if verbose:
+    if VERBOSE:
         logger.debug(f"Path to transcript: {path_to_current}")
         logger.debug(f"Path to chunks: {path_to_dir_chunks}")
         logger.debug(f"Total number of files: {len(os.listdir(path_to_dir_chunks))}")
@@ -105,10 +106,10 @@ def deepgram_transcription(path_to_current, token, debug = False, verbose = Fals
             logger.info("Transcription file is empty")
         else:
             return
-    if debug:
+    if DEBUG:
         logger.info(f"Deepgram Transcription finished")
         return
-    deepgram = DeepgramClient()
+    deepgram = DeepgramClient() # gets from DEEPGRAM_API_KEY env variable
     options = PrerecordedOptions(
         model="nova-2",
         smart_format=True,

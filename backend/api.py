@@ -8,6 +8,9 @@ load_dotenv()
 
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.transcriber_v2 import runner
+from backend.constants import DEBUG
+
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
@@ -43,4 +46,15 @@ def run_transcriber_single(session_number: int):
         os.system(f"python3 /app/pysrc/transcriber_v2.py -s {session_number} -d")
     else:
         print(f"python3 /app/pysrc/transcriber_v2.py -s {session_number}")
+    return "ok"
+
+@app.post("/run_transcriber_single_file/")
+def run_transcriber_single(file_path: str):
+    # debug = os.getenv("DEBUG_MODE", "")
+    if DEBUG:
+        logger.debug(f"{file_path}")
+        runner(file_path, os.getenv("BASE_PATH"), os.getenv("TRANSCRIPT_PATH"))
+    else:        
+        # file_name, path_to_all_recodings, path_to_dir_transcript, debug, verbose, skip_input = False
+        runner(file_path, os.getenv("BASE_PATH"), os.getenv("TRANSCRIPT_PATH"))
     return "ok"
