@@ -8,7 +8,7 @@ load_dotenv()
 
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.transcriber_v2 import runner
+from backend.runner import runner
 from backend.constants import DEBUG
 
 app = FastAPI()
