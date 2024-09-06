@@ -36,9 +36,11 @@ def get_all_transcript_paths():
             possible_transcript_paths.append(path)
     return possible_transcript_paths
 
-# TODO: add debug mode
 @app.post("/run_transcriber_single/")
 def run_transcriber_single(session_number: int):
-    # os.system(f"python3 /app/pysrc/transcriber_v2.py -s {session_number}")
-    print(f"python3 /app/pysrc/transcriber_v2.py -s {session_number}")
+    debug = os.getenv("DEBUG_MODE", "")
+    if debug and debug.lower() == "true":
+        os.system(f"python3 /app/pysrc/transcriber_v2.py -s {session_number} -d")
+    else:
+        print(f"python3 /app/pysrc/transcriber_v2.py -s {session_number}")
     return "ok"

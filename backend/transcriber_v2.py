@@ -1,22 +1,29 @@
-import asyncio
 from datetime import datetime
 from dotenv import load_dotenv
 import os
 import sys
 from tqdm import tqdm
-from deepgram import (
-    Deepgram,
-    DeepgramClient,
-    PrerecordedOptions,
-)
-from pydub import AudioSegment
-import zipfile
-import shutil
-import glob
 import argparse
-from openai import OpenAI
 from loguru import logger
+from backend.transcription.deepgram import extract_audio_from_zip, split_audio_into_chunks, deepgram_transcription
+from backend.summarization.openai import openai_massage
+from backend.utils.shared_utils import check_if_exists
+
 load_dotenv()
+
+#TODO: Check if this makes sense vs the one in api.py
+def get_session_from_name(session_name):
+    session_num = int(session_name.split(" ")[-1])
+    if(session_num <= 9):
+        return None
+    return f"session {session_num - 1}"
+
+def organizer(path_to_current, debug = False):
+    if not check_if_exists(path_to_current):
+        logger.debug(f"Creating {path_to_current}")
+        if not debug:
+            os.makedirs(f"{path_to_current}")
+            os.makedirs(f"{path_to_current}/audio_chunks")
 
 def main_loop(path_to_all_recodings, path_to_current, path_to_prev, session_name, prev_session_name, debug, verbose, skip_input):
     path_to_recording = f"{path_to_all_recodings}/{session_name}.zip"
@@ -48,7 +55,7 @@ def main_loop(path_to_all_recodings, path_to_current, path_to_prev, session_name
 
 def runner(file_name, path_to_all_recodings, path_to_dir_transcript, debug, verbose, skip_input = False):
     session_name = file_name.split(".")[0]
-    prev_session_name = _get_last_session(session_name)
+    prev_session_name = get_session_from_name(session_name)
     path_to_current = f"{path_to_dir_transcript}/{session_name}/" 
     path_to_prev = f"{path_to_dir_transcript}/{prev_session_name}/" if prev_session_name else None
     logger.info("*"*20)
