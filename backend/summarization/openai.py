@@ -3,8 +3,9 @@ from loguru import logger
 from openai import OpenAI
 from backend.utils.shared_utils import check_if_exists
 from backend.constants import DEBUG, VERBOSE
+from backend.sample_prompt import SAMPLE_PROMPT
 
-def openai_massage(path_to_current, path_to_prev):
+def openai_massage(path_to_current, path_to_prev, desired_summary_name, model):
     desired_summary_name = os.getenv("DESIRED_SUMMARY_NAME", "summary")
     model = os.getenv("OPENAI_MODEL", None)
     if not model:
@@ -13,8 +14,17 @@ def openai_massage(path_to_current, path_to_prev):
     if check_if_exists(f"{path_to_current}{desired_summary_name}.txt"):
         logger.info("Summary already exists")
         return
-    with open(f"{os.path.dirname(__file__)}/prompt_file.txt", "r") as f:
-        prompt = f.read()
+    
+    try:
+        logger.debug(f"Opening prompt file")
+        with open(f"{os.path.dirname(__file__)}/prompt_file.txt", "r") as f:
+            prompt = f.read()
+    except FileNotFoundError:
+        logger.error("Prompt file not found, using sample prompt")
+        prompt = SAMPLE_PROMPT
+    except Exception as e:
+        logger.error(f"Exception: {e}")
+        raise e
     logger.info(f"OpenAI massage start")
     if path_to_prev:
         try:

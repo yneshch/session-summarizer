@@ -50,11 +50,10 @@ def run_transcriber_single(session_number: int):
 
 @app.post("/run_transcriber_single_file/")
 def run_transcriber_single(file_path: str):
-    # debug = os.getenv("DEBUG_MODE", "")
     if DEBUG:
         logger.debug(f"{file_path}")
         runner(file_path, os.getenv("BASE_PATH"), os.getenv("TRANSCRIPT_PATH"))
     else:        
-        # file_name, path_to_all_recodings, path_to_dir_transcript, debug, verbose, skip_input = False
+        # file_name, path_to_all_recodings, path_to_dir_transcript
         runner(file_path, os.getenv("BASE_PATH"), os.getenv("TRANSCRIPT_PATH"))
     return "ok"
