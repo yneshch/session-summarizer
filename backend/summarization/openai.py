@@ -11,10 +11,9 @@ def openai_massage(path_to_current, path_to_prev, desired_summary_name, model):
     if not model:
         logger.error("Model not found")
         raise Exception("Model not found")
-    if check_if_exists(f"{path_to_current}{desired_summary_name}.txt"):
+    if not DEBUG and check_if_exists(f"{path_to_current}{desired_summary_name}.txt"):
         logger.info("Summary already exists")
         return
-    
     try:
         logger.debug(f"Opening prompt file")
         with open(f"{os.path.dirname(__file__)}/prompt_file.txt", "r") as f:
@@ -43,7 +42,8 @@ def openai_massage(path_to_current, path_to_prev, desired_summary_name, model):
         logger.debug(f"Messages: {messages}")
         logger.debug(f"Prompt: {prompt}")
     if DEBUG:
-        logger.info(f"OpenAI massage end")
+        # If in debug mode, don't actually send the request
+        logger.info(f"Running openai summary in debug mode, not sending request")
         return
     with open(f"{path_to_current}deepgram-transcription.txt", "r") as res:
         text = res.read()

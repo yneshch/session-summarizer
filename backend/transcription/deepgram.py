@@ -15,8 +15,9 @@ from backend.constants import DEBUG, VERBOSE
 def extract_audio_from_zip(path_to_audio, path_to_current):
     if os.path.isdir(path_to_audio):
         if DEBUG:
+            # if in debug mode, don't actually extract the audio
             logger.error(f"{path_to_audio} is a directory")
-        return False
+            return False
     if glob.glob(f"{path_to_current}/*yak*") or glob.glob(f"{path_to_current}/*Yak*"):
         logger.info("Audio already extracted")
         return True
@@ -56,7 +57,7 @@ def split_audio_into_chunks(path_to_current):
     count = 0
     desired_audio_length = int(os.getenv("DESIRED_AUDIO_LENGTH", str(30 * 60 * 1000)))
     start = 0
-    if check_if_exists(path_to_dir_chunks):
+    if not DEBUG and check_if_exists(path_to_dir_chunks):
         if len(os.listdir(path_to_dir_chunks)) > 0:
             logger.info("Chunks already exist")
             test_audio = AudioSegment.from_file(f"{path_to_dir_chunks}chunk_1.wav")
@@ -68,7 +69,8 @@ def split_audio_into_chunks(path_to_current):
                 # shutil.rmtree(path_to_dir_chunks)
                 # os.makedirs(path_to_dir_chunks)
     if DEBUG:
-        logger.info("Splitting complete")
+        # if in debug mode, don't actually split the audio
+        logger.info("Running splitting audio in debug mode, not actually splitting")
         return
     audio = AudioSegment.from_file(files[0])
     while start < len(audio):
@@ -100,14 +102,15 @@ def deepgram_transcription(path_to_current):
         logger.debug(f"Path to transcript: {path_to_current}")
         logger.debug(f"Path to chunks: {path_to_dir_chunks}")
         logger.debug(f"Total number of files: {len(os.listdir(path_to_dir_chunks))}")
-    if check_if_exists(f"{path_to_current}deepgram-transcription.txt"):
+    if not DEBUG and check_if_exists(f"{path_to_current}deepgram-transcription.txt"):
         logger.info("Transcription already exists")
         if os.stat(f"{path_to_current}deepgram-transcription.txt").st_size == 0:
             logger.info("Transcription file is empty")
         else:
             return
     if DEBUG:
-        logger.info(f"Deepgram Transcription finished")
+        # if in debug mode, don't actually transcribe
+        logger.info(f"Running deepgram in debug mode, not sending request")
         return
     deepgram = DeepgramClient() # gets from DEEPGRAM_API_KEY env variable
     options = PrerecordedOptions(

@@ -7,7 +7,7 @@ from loguru import logger
 from backend.transcription.deepgram import extract_audio_from_zip, split_audio_into_chunks, deepgram_transcription
 from backend.summarization.openai import openai_massage
 from backend.utils.shared_utils import check_if_exists
-from backend.constants import DEBUG, VERBOSE
+from backend.constants import DEBUG, VERBOSE, DESIRED_SUMMARY_NAME, OPENAI_MODEL
 
 load_dotenv()
 
@@ -53,7 +53,7 @@ def runner(file_name, path_to_all_recodings, path_to_dir_transcript):
             return
         split_audio_into_chunks(path_to_current)
         deepgram_transcription(path_to_current)
-        openai_massage(path_to_current, path_to_prev)
+        openai_massage(path_to_current, path_to_prev, DESIRED_SUMMARY_NAME, OPENAI_MODEL)
     except Exception as e:
         logger.error(f"Exception: {e}")
         raise e

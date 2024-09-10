@@ -1,3 +1,5 @@
 .env
 .next
 /frontend
+
+**/__pycache__/**

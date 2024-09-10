@@ -1,15 +1,15 @@
-from typing import Union
+from typing import Optional, Union
 
 import os
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from loguru import logger
-load_dotenv()
 
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from backend.runner import runner
-from backend.constants import DEBUG
+from backend.constants import DEBUG, TRANSCRIPT_PATH
+from backend.utils.api_utils import _extract_session_number
 
 app = FastAPI()
 app.add_middleware(
@@ -19,41 +19,48 @@ app.add_middleware(
     allow_methods=["*"],
 )
 
+class TranscriptionRequest(BaseModel):
+    session_name: Optional[str]
+    # file_path: Optional[str]
+
+class TranscriptionResponse(BaseModel):
+    message: str
+
 @app.get("/")
 def read_root():
     return "healthy"
 
-def _extract_session_number(path):
-    path_to_dir_transcript = os.getenv("TRANSCRIPT_PATH")
-    if os.path.isdir(f"{path_to_dir_transcript}/{path}"):
-        return int(path.split(" ")[-1])
-    return -1
-
 @app.get("/get_all_transcript_paths")
 def get_all_transcript_paths():
-    path_to_dir_transcript = os.getenv("TRANSCRIPT_PATH")
     possible_transcript_paths = []
-    sorted_list = [f"{path_to_dir_transcript}/{path}" for path in sorted(os.listdir(path_to_dir_transcript), key= _extract_session_number)]
+    sorted_list = [f"{TRANSCRIPT_PATH}/{path}" for path in sorted(os.listdir(TRANSCRIPT_PATH), key= _extract_session_number)]
     for path in sorted_list:
         if os.path.isdir(path):
             possible_transcript_paths.append(path)
     return possible_transcript_paths
 
 @app.post("/run_transcriber_single/")
-def run_transcriber_single(session_number: int):
-    debug = os.getenv("DEBUG_MODE", "")
-    if debug and debug.lower() == "true":
-        os.system(f"python3 /app/pysrc/transcriber_v2.py -s {session_number} -d")
-    else:
-        print(f"python3 /app/pysrc/transcriber_v2.py -s {session_number}")
-    return "ok"
+def run_transcriber_single(session_name: str):
+    if DEBUG:
+        logger.debug(f"{session_name}")
+    try:
+        # TODO: Need to find file
+        runner(f"{TRANSCRIPT_PATH}/{session_name}", os.getenv("BASE_PATH"), os.getenv("TRANSCRIPT_PATH"))
+        return "ok"
+    except Exception as e:
+        logger.error(f"Error running transcriber: {e}")
+        return "error"
 
-@app.post("/run_transcriber_single_file/")
-def run_transcriber_single(file_path: str):
+@app.post("/run_transcriber_single_file/", response_model=TranscriptionResponse)
+def run_transcriber_single(request: TranscriptionRequest):
+    file_path = request.session_name
+    if not file_path:
+        return TranscriptionResponse(message="error")
     if DEBUG:
         logger.debug(f"{file_path}")
+    try:
         runner(file_path, os.getenv("BASE_PATH"), os.getenv("TRANSCRIPT_PATH"))
-    else:        
-        # file_name, path_to_all_recodings, path_to_dir_transcript
-        runner(file_path, os.getenv("BASE_PATH"), os.getenv("TRANSCRIPT_PATH"))
-    return "ok"
+        return TranscriptionResponse(message="ok")
+    except Exception as e:
+        logger.error(f"Error running transcriber: {e}")
+        return TranscriptionResponse(message="error")
