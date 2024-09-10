@@ -48,7 +48,8 @@ def openai_massage(path_to_current, path_to_prev, desired_summary_name, model):
     with open(f"{path_to_current}deepgram-transcription.txt", "r") as res:
         text = res.read()
         messages.append({"role": "user", "content": text})
-    client = OpenAI() # gets from OPENAI_API_KEY env variable
+    # gets from OPENAI_API_KEY env variable
+    client = OpenAI() 
     response = client.chat.completions.create(model = model, messages = messages)
     with open(f"{path_to_current}{desired_summary_name}.txt", "w") as file:
         file.write(response.choices[0].message.content)

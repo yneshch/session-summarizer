@@ -11,7 +11,6 @@ from deepgram import (
 )
 from backend.constants import DEBUG, VERBOSE
 
-
 def extract_audio_from_zip(path_to_audio, path_to_current):
     if os.path.isdir(path_to_audio):
         if DEBUG:
@@ -112,7 +111,7 @@ def deepgram_transcription(path_to_current):
         # if in debug mode, don't actually transcribe
         logger.info(f"Running deepgram in debug mode, not sending request")
         return
-    deepgram = DeepgramClient() # gets from DEEPGRAM_API_KEY env variable
+    client = DeepgramClient() # gets from DEEPGRAM_API_KEY env variable
     options = PrerecordedOptions(
         model="nova-2",
         smart_format=True,
@@ -126,5 +125,5 @@ def deepgram_transcription(path_to_current):
                     payload = {
                         "buffer": f,
                     }
-                    if _fetch_with_retry(deepgram, payload, options, res, i):
+                    if _fetch_with_retry(client, payload, options, res, i):
                         break
