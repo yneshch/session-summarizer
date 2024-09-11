@@ -1,9 +1,9 @@
 import os
 from loguru import logger
 from openai import OpenAI
-from backend.utils.shared_utils import check_if_exists
-from backend.constants import DEBUG, VERBOSE
-from backend.sample_prompt import SAMPLE_PROMPT
+from utils.shared_utils import check_if_exists
+from utils.constants import DEBUG, VERBOSE
+from sample_prompt import SAMPLE_PROMPT
 
 def openai_massage(path_to_current, path_to_prev, desired_summary_name, model):
     desired_summary_name = os.getenv("DESIRED_SUMMARY_NAME", "summary")

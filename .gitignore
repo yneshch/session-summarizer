@@ -1,5 +1,11 @@
+# Specifics
 .env
-.next
-/frontend
 
-**/__pycache__/**
+# Folder Types
+**/__pycache__/
+
+# File Types
+*.ipynb
+*.txt
+*.json
+*.ipynb

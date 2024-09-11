@@ -1,15 +1,13 @@
 from datetime import datetime
-from dotenv import load_dotenv
 import os
 import sys
 from loguru import logger
 
-from backend.transcription.transcriber_dg import extract_audio_from_zip, split_audio_into_chunks, deepgram_transcription
-from backend.summarization.summerizer_openai import openai_massage
-from backend.utils.shared_utils import check_if_exists
-from backend.constants import DEBUG, VERBOSE, DESIRED_SUMMARY_NAME, OPENAI_MODEL
+from transcription.transcriber_dg import extract_audio_from_zip, split_audio_into_chunks, deepgram_transcription
+from summarization.summerizer_openai import openai_massage
+from utils.shared_utils import check_if_exists
+from utils.constants import DEBUG, VERBOSE, DESIRED_SUMMARY_NAME, OPENAI_MODEL
 
-load_dotenv()
 
 logger.remove()
 if DEBUG:

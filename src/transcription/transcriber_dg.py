@@ -3,13 +3,13 @@ from loguru import logger
 import glob
 import zipfile
 import shutil
-from backend.utils.shared_utils import check_if_exists
+from utils.shared_utils import check_if_exists
 from pydub import AudioSegment
 from deepgram import (
     DeepgramClient,
     PrerecordedOptions,
 )
-from backend.constants import DEBUG, VERBOSE
+from utils.constants import DEBUG, VERBOSE
 
 def extract_audio_from_zip(path_to_audio, path_to_current):
     if os.path.isdir(path_to_audio):

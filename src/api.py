@@ -7,9 +7,9 @@ from loguru import logger
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from backend.runner import runner
-from backend.constants import DEBUG, TRANSCRIPT_PATH
-from backend.utils.api_utils import _extract_session_number
+from runner import runner
+from utils.constants import DEBUG, TRANSCRIPT_PATH
+from utils.api_utils import _extract_session_number
 
 app = FastAPI()
 app.add_middleware(

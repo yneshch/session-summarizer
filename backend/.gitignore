@@ -1,7 +1,0 @@
-/logs
-*.ipynb
-/__pycache__
-*.md
-*.txt
-*.json
-*.ipynb
