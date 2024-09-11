@@ -4,8 +4,8 @@ import os
 import sys
 from loguru import logger
 
-from backend.transcription.deepgram import extract_audio_from_zip, split_audio_into_chunks, deepgram_transcription
-from backend.summarization.openai import openai_massage
+from backend.transcription.transcriber_dg import extract_audio_from_zip, split_audio_into_chunks, deepgram_transcription
+from backend.summarization.summerizer_openai import openai_massage
 from backend.utils.shared_utils import check_if_exists
 from backend.constants import DEBUG, VERBOSE, DESIRED_SUMMARY_NAME, OPENAI_MODEL
 
