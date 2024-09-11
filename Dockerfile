@@ -12,4 +12,4 @@ RUN apt-get update && apt-get install -y ffmpeg
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Run api.py when the container launches
-CMD ["fastapi", "dev", "api.py" "--host", "0.0.0.0"]
+CMD ["fastapi", "dev", "api.py", "--host", "0.0.0.0"]
