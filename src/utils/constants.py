@@ -14,5 +14,13 @@ if IS_WINDOWS_MACHINE:
 else:
     BASE_PATH = Path(os.getenv("BASE_PATH"))
     TRANSCRIPT_PATH = Path(os.getenv("TRANSCRIPT_PATH"))
+
 DESIRED_SUMMARY_NAME = os.getenv("DESIRED_SUMMARY_NAME", "summary")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", None)
+
+# validate TRANSCRIPT_PATH exists
+if not os.path.exists(BASE_PATH):
+    raise Exception(f"BASE_PATH: {BASE_PATH} does not exist")
+if not os.path.exists(TRANSCRIPT_PATH):
+    os.mkdir(TRANSCRIPT_PATH)
+    print(f"TRANSCRIPT_PATH: {TRANSCRIPT_PATH} does not exist, creating it")

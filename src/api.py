@@ -7,8 +7,8 @@ from loguru import logger
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from runner import runner
-from utils.constants import DEBUG, TRANSCRIPT_PATH
+from utils.runner import runner
+from utils.constants import DEBUG, BASE_PATH
 from utils.api_utils import _extract_session_number
 
 app = FastAPI()
@@ -30,10 +30,10 @@ class TranscriptionResponse(BaseModel):
 def read_root():
     return "healthy"
 
-@app.get("/get_all_transcript_paths")
-def get_all_transcript_paths():
+@app.get("/get_all_files_to_transcribe")
+def get_all_files_to_transcribe():
     possible_transcript_paths = []
-    sorted_list = [f"{TRANSCRIPT_PATH}/{path}" for path in sorted(os.listdir(TRANSCRIPT_PATH), key= _extract_session_number)]
+    sorted_list = [f"{BASE_PATH}/{path}" for path in sorted(os.listdir(BASE_PATH), key= _extract_session_number)]
     for path in sorted_list:
         if os.path.isdir(path):
             possible_transcript_paths.append(path)
