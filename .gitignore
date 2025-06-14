@@ -4,6 +4,7 @@
 # Folder Types
 **/__pycache__/
 logs/*
+venv/*
 
 # File Types
 *.ipynb 
