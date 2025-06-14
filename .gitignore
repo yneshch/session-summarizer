@@ -3,9 +3,10 @@
 
 # Folder Types
 **/__pycache__/
+logs/*
 
 # File Types
-*.ipynb
-*.txt
+*.ipynb 
 *.json
 *.ipynb
+*.txt
